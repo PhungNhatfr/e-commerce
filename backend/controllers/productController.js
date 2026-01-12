@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from "cloudinary" 
 import productModel from "../models/productModel.js";
+import orderModel from "../models/orderModel.js";
 
 // function for add product
 const addProduct = async (req, res) => {
@@ -117,4 +118,62 @@ const singleProduct = async (req, res) => {
 
 } 
 
-export {listProduct, addProduct, removeProduct, singleProduct}
+// function find the product that bought together
+const frequentlyBoughtTogether = async (req, res) => {
+
+    try {
+        
+        const { productIds } = req.body;
+        
+        if (!productIds || productIds.length === 0) {
+            return res.json({
+                success: true,
+                products: [],
+            })
+        }
+        
+        const products = await orderModel.aggregate([
+        
+            { $match: { "items._id": {$in: productIds} } },
+            
+            { $unwind: "$items" },
+            
+            { "$match": { "items._id": { $nin: productIds } } },
+            
+            {
+                $group: {
+                
+                    _id: "$items._id",
+                    
+                    count: { $sum: 1 },
+                    
+                    productDetails: { $first: "$items"}
+                    
+                }
+            },
+            
+            { $sort: { count: -1 } },
+            
+            { $limit: 5}
+        
+        ])
+        
+        const recommended = products.map(p => p.productDetails)
+        
+        res.json({
+            success: true,
+            products: recommended
+        })
+        
+    } catch (error) {
+        
+        console.log(error);
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+    
+}
+
+export {listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether}

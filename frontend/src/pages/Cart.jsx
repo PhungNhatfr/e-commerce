@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
+import FrquentlyBoughtTogether from "../components/FrquentlyBoughtTogether";
 import Title from "../components/Title";
 import { ShopContext } from "../context/ShopContext";
 
@@ -40,6 +41,10 @@ const Cart = () => {
           const productData = products.find(
             (product) => product._id === item._id
           );
+          
+          if (!productData) {
+            return null;
+          }
 
           return (
             <div
@@ -106,6 +111,8 @@ const Cart = () => {
           </div>
         </div>
       </div>
+      
+      <FrquentlyBoughtTogether />
     </div>
   );
 };
