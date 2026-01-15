@@ -2,6 +2,7 @@ import {v2 as cloudinary} from "cloudinary"
 import productModel from "../models/productModel.js";
 import orderModel from "../models/orderModel.js";
 
+
 // function for add product
 const addProduct = async (req, res) => {
     try {
@@ -176,4 +177,84 @@ const frequentlyBoughtTogether = async (req, res) => {
     
 }
 
-export {listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether}
+// Function find the products that were bought by the person who have same style
+const getPersonalizeProducts = async (req, res) => {
+
+    try {
+        
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.json({
+                success: false,
+                message: "User ID is required"
+            })
+        }
+        
+        // Find all orders that have userId
+        const userOrders = await orderModel.find({ userId })
+        
+        // Get the product (id product) that user bought
+        const personalProducts = new Set();
+        userOrders.forEach(order => {
+            order.items.forEach(item => {
+                personalProducts.add(String(item._id))
+            })
+        })
+        
+        if (personalProducts.size === 0) {
+            return res.json({
+                success: true,
+                products: []
+            })
+        }
+        
+        // Find all products of maximum 100 users that bought minimum 1 product that the user (userId) bought
+        const similarOrders = await orderModel.find({
+        
+            "items._id": { $in: Array.from(personalProducts) },
+            userId: { $ne: userId }
+        }).limit(100);
+        
+        const candidateProduct = {}
+        
+        similarOrders.forEach(order => {
+            order.items.forEach(item => {
+                const itemId = String(item._id);
+                // We just need the products that the user didn't buy
+                if (!personalProducts.has(itemId)) {
+                    // if we have this product in candidate, we will increase score 1
+                        // if not (it means that this product didn't exist in candidate product), we will save this product in candidiate product and make the score = 1
+                    if (candidateProduct[itemId]) {
+                        candidateProduct[itemId].score +=1
+                    } else {
+                        candidateProduct[itemId] = {
+                            ...item,
+                            scrore: 1
+                        }
+                    }
+                }
+            
+            })
+        
+        })
+        
+        
+        // Now we choose the best 5 product (5 products with the most apprearance)
+        const recommendations = Object.values(candidateProduct).sort((a, b) => b.score - a.score).slice(0, 5);
+        
+        res.json({
+            success: true,
+            products: recommendations,
+        })
+    } catch (error) {
+        console.log(error);
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+
+}
+
+export {listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether, getPersonalizeProducts}

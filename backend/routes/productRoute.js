@@ -1,6 +1,7 @@
 import express from "express"
-import { listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether } from '../controllers/productController.js'
+import { listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether, getPersonalizeProducts } from '../controllers/productController.js'
 import adminAuth from "../middleware/adminAuth.js";
+import authUser from '../middleware/auth.js'
 import upload from "../middleware/multer.js";
 
 const productRouter = express.Router();
@@ -10,5 +11,6 @@ productRouter.post('/remove',adminAuth, removeProduct);
 productRouter.post('/single', singleProduct);
 productRouter.get('/list', listProduct);
 productRouter.post('/together', frequentlyBoughtTogether);
+productRouter.post('/personalize', authUser ,getPersonalizeProducts);
 
 export default productRouter

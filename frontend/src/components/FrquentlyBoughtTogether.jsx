@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const FrquentlyBoughtTogether = () => {
     
-    const { backendUrl, cartItems } = useContext(ShopContext);
+    const { backendUrl, cartItems, getCartCount } = useContext(ShopContext);
     const [frequentBoughtTogetherProducts, setFrequentlyBoughtTogetherProducts] = useState([]);
     
     const fetchFrequentlyBoughtTogetherProducts = async () => {
@@ -35,10 +35,10 @@ const FrquentlyBoughtTogether = () => {
     
     useEffect(() => {
         fetchFrequentlyBoughtTogetherProducts();
-        console.log(frequentBoughtTogetherProducts);
     }, [cartItems])
     
-  return frequentBoughtTogetherProducts && (
+    
+  return  getCartCount() && frequentBoughtTogetherProducts ? (
       <div className='my-24'>
           <div className='text-center text-3xl py-2'>
             <Title text1={'RECOMMENDATION'} text2={'PRODUCTS'} />
@@ -50,7 +50,7 @@ const FrquentlyBoughtTogether = () => {
             ))}
           </div>
       </div>
-  )
+  ) : null
 }
 
 export default FrquentlyBoughtTogether

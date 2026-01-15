@@ -39,6 +39,7 @@ const Orders = () => {
   
   useEffect(() => {
     loadOrderData()
+    console.log(orderData)
   }, [token])
   
   return (
