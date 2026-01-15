@@ -119,6 +119,59 @@ const singleProduct = async (req, res) => {
 
 } 
 
+// Find related products
+const relatedProducts = async (req, res) => {
+    try {
+        const { productId, category, subCategory } = req.body;
+
+        let products = await productModel.find({
+            category: category,
+            subCategory: subCategory,
+            _id: { $ne: productId } 
+        }).limit(5);
+
+        let existingIds = products.map(p => p._id);
+        existingIds.push(productId);
+
+        if (products.length < 5) {
+            const needed = 5 - products.length;
+            const moreCategory = await productModel.find({
+                category: category,
+                _id: { $nin: existingIds }
+            }).limit(needed);
+
+            products = [...products, ...moreCategory];
+            
+            moreCategory.forEach(p => existingIds.push(p._id));
+        }
+
+        if (products.length < 5) {
+            const needed = 5 - products.length;
+            
+            
+            const fallbackProducts = await productModel.find({
+                _id: { $nin: existingIds } 
+            })
+            .sort({ bestseller: -1 }) 
+            .limit(needed);
+
+            products = [...products, ...fallbackProducts];
+        }
+
+        res.json({
+            success: true,
+            products: products
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 // function find the product that bought together
 const frequentlyBoughtTogether = async (req, res) => {
 
@@ -257,4 +310,4 @@ const getPersonalizeProducts = async (req, res) => {
 
 }
 
-export {listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether, getPersonalizeProducts}
+export {listProduct, addProduct, removeProduct, singleProduct, frequentlyBoughtTogether, getPersonalizeProducts, relatedProducts}

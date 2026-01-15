@@ -91,7 +91,7 @@ const Product = () => {
       </div>
       
       {/* Display related products */}
-      <RelatedProducts category={productData.category} subCategory={productData.subCategory} />
+      <RelatedProducts productId={productData._id} category={productData.category} subCategory={productData.subCategory} />
     </div>
   ) : (
     <div className="opacity-0"></div>
